@@ -136,6 +136,22 @@ exports.updateUserDetails = async (req, res) => {
 };
 
 
+//Give get user api return user data I have only one as of now for testing
+exports.getUserDetails = async (req, res) => {
+  console.log("here");
+  
+  try {
+    const user = await Subscriber.find();
+    console.log(user);
+
+    
+    res.json({ user });
+  } catch (error) {
+    console.error("Get user error:", error);
+    res.status(500).json({ error: "Failed to fetch user details" });
+  }
+};
+
 // const Project = require("../models/project.model");
 
 // exports.getUserProjects = async (req, res) => {

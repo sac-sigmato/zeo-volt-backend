@@ -124,3 +124,22 @@ exports.getSubscriberById = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+exports.updateSubscriberById = async (req, res) => {
+  try {
+    const updatedSubscriber = await Subscriber.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedSubscriber) {
+      return res.status(404).json({ message: "Subscriber not found" });
+    }
+
+    res.status(200).json(updatedSubscriber);
+  } catch (err) {
+    console.error("Error updating subscriber:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

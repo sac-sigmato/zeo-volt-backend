@@ -6,6 +6,7 @@ const authController = require("../controllers/authController");
 router.post("/generate-otp", authController.generateOTP);
 router.post("/verify-otp", authController.verifyOTP);
 router.put("/user/:userId", authController.updateUserDetails);
+router.get("/get-user", authController.getUserDetails);
 
 // // Project Info
 // router.get("/user/:userId/projects", authController.getUserProjects);
