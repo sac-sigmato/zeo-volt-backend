@@ -7,6 +7,10 @@ router.post("/generate-otp", authController.generateOTP);
 router.post("/verify-otp", authController.verifyOTP);
 router.put("/user/:userId", authController.updateUserDetails);
 router.get("/get-user", authController.getUserDetails);
+router.post("/submit-referral/:userId", authController.submitReferral);
+router.post("/add-maintenance-task", authController.addMaintenanceTask);
+router.post("/add-tech-person", authController.addTechPerson);
+router.put("/update-maintenance-task/:taskId", authController.updateTaskStatus);
 
 // // Project Info
 // router.get("/user/:userId/projects", authController.getUserProjects);

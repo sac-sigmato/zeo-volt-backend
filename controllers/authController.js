@@ -1,5 +1,6 @@
 // const client = require("../utils/twilioClient"); // Adjust path as needed
 const Subscriber = require("../models/Subscriber");
+const Referral = require("../models/referral");
 // Generate OTP via Twilio
 exports.generateOTP = async (req, res) => {
   try {
@@ -74,7 +75,6 @@ exports.verifyOTP = async (req, res) => {
   }
 };
 
-
 exports.updateUserDetails = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -135,20 +135,118 @@ exports.updateUserDetails = async (req, res) => {
   }
 };
 
-
 //Give get user api return user data I have only one as of now for testing
 exports.getUserDetails = async (req, res) => {
   console.log("here");
-  
+
   try {
     const user = await Subscriber.find();
     console.log(user);
 
-    
     res.json({ user });
   } catch (error) {
     console.error("Get user error:", error);
     res.status(500).json({ error: "Failed to fetch user details" });
+  }
+};
+
+exports.submitReferral = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { name, phone, email } = req.body;
+
+    const referral = new Referral({
+      referredBy: userId,
+      name,
+      phone,
+      email,
+      status: "Pending",
+    });
+
+    await referral.save();
+    res.json({ message: "Referral submitted successfully", referral });
+  } catch (error) {
+    console.error("Submit referral error:", error);
+    res.status(500).json({ error: "Failed to submit referral" });
+  }
+};
+
+// create a new controller for add maintenance task
+const MaintenanceTask = require("../models/MaintenanceTask");
+exports.addMaintenanceTask = async (req, res) => {
+  try {
+    const { title, description, assignedTo, subscriberId } = req.body;
+    if (!subscriberId) {
+      return res.status(400).json({ error: "Subscriber ID is required" });
+    }
+    const newTask = new MaintenanceTask({
+      title,
+      description,
+      assignedTo,
+      subscriber: subscriberId,
+    });
+    await newTask.save();
+    res
+      .status(201)
+      .json({
+        message: "Maintenance task created successfully",
+        task: newTask,
+      });
+  } catch (error) {
+    console.error("Add maintenance task error:", error);
+    res.status(500).json({ error: "Failed to create maintenance task" });
+  }
+};
+
+//create a new cpntroller for add tech person
+const TechPerson = require("../models/TechPerson");
+exports.addTechPerson = async (req, res) => {
+  try {
+    const { name, phone, email } = req.body;
+    const newTechPerson = new TechPerson({
+      name,
+      phone,
+      email,
+    });
+    await newTechPerson.save();
+    res
+      .status(201)
+      .json({
+        message: "Tech person added successfully",
+        techPerson: newTechPerson,
+      });
+  } catch (error) {
+    console.error("Add tech person error:", error);
+    res.status(500).json({ error: "Failed to add tech person" });
+  }
+};
+
+//create a new controller for techperson to update task status and checklist can upload images
+exports.updateTaskStatus = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { status, checklist, images } = req.body;
+    const task = await MaintenanceTask
+      .findById(taskId)
+      .populate("subscriber");
+    if (!task) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+    task.updates.push({
+      status,
+      checklist,
+      images,
+      updatedAt: new Date(),
+      subscriber: task.subscriber._id, // Assuming subscriber is the tech person updating the task
+    });
+    await task.save();
+    res.json({
+      message: "Task status updated successfully",
+      task,
+    });
+  } catch (error) {
+    console.error("Update task status error:", error);
+    res.status(500).json({ error: "Failed to update task status" });
   }
 };
 
