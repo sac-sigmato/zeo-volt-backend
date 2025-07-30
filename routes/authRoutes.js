@@ -5,13 +5,17 @@ const authController = require("../controllers/authController");
 // OTP & User
 router.post("/generate-otp", authController.generateOTP);
 router.post("/verify-otp", authController.verifyOTP);
-router.put("/update-profile/:userId", authController.updateUserDetails);
+router.post("/update-profile/:userId", authController.updateUserDetails);
 router.post("/forgot-password", authController.forgotPassword);
 router.get("/get-user", authController.getUserDetails);
+// get tech persons list
+router.get("/tech-persons", authController.getTechPersonsList);
 router.post("/submit-referral/:userId", authController.submitReferral);
 router.post("/add-maintenance-task", authController.addMaintenanceTask);
 router.post("/add-tech-person", authController.addTechPerson);
 router.put("/update-maintenance-task/:taskId", authController.updateTaskStatus);
+
+router.get("/tech-person/:id/tasks", authController.getTasksForTechPerson);
 
 // // Project Info
 // router.get("/user/:userId/projects", authController.getUserProjects);

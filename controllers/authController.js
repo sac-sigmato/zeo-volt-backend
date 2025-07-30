@@ -61,6 +61,7 @@ exports.verifyOTP = async (req, res) => {
       return res.json({
         message: "OTP verified (bypass mode)",
         userId: user._id,
+        userDetails: user,
       });
     }
 
@@ -89,6 +90,8 @@ exports.verifyOTP = async (req, res) => {
 exports.updateUserDetails = async (req, res) => {
   try {
     const { userId } = req.params;
+    console.log("Updating user details for ID:", userId);
+    
     const {
       subId,
       name,
@@ -200,7 +203,7 @@ exports.submitReferral = async (req, res) => {
 };
 
 // create a new controller for add maintenance task
-const MaintenanceTask = require("../models/MaintenanceTask");
+const {MaintenanceTask} = require("../models/MaintenanceTask");
 exports.addMaintenanceTask = async (req, res) => {
   try {
     const { title, description, assignedTo, subscriberId } = req.body;
@@ -227,9 +230,12 @@ exports.addMaintenanceTask = async (req, res) => {
 };
 
 //create a new cpntroller for add tech person
-const TechPerson = require("../models/TechPerson");
+const { TechPerson } = require("../models/techperson");
+;
 exports.addTechPerson = async (req, res) => {
   try {
+    console.log("Adding tech person:", req.body);
+    
     const { name, phone, email } = req.body;
     const newTechPerson = new TechPerson({
       name,
@@ -249,34 +255,75 @@ exports.addTechPerson = async (req, res) => {
   }
 };
 
+// Get tech persons list
+exports.getTechPersonsList = async (req, res) => {
+  try {
+    const techPersons = await TechPerson.find();
+    res.json({ techPersons });
+  } catch (error) {
+    console.error("Get tech persons error:", error);
+    res.status(500).json({ error: "Failed to fetch tech persons" });
+  }
+};
+
 //create a new controller for techperson to update task status and checklist can upload images
 exports.updateTaskStatus = async (req, res) => {
   try {
     const { taskId } = req.params;
-    const { status, checklist, images } = req.body;
-    const task = await MaintenanceTask
-      .findById(taskId)
-      .populate("subscriber");
-    if (!task) {
-      return res.status(404).json({ error: "Task not found" });
-    }
-    task.updates.push({
+    const { status, checklist, images, subscriber } = req.body;
+
+    const update = {
       status,
       checklist,
       images,
+      subscriber,
       updatedAt: new Date(),
-      subscriber: task.subscriber._id, // Assuming subscriber is the tech person updating the task
-    });
-    await task.save();
-    res.json({
-      message: "Task status updated successfully",
-      task,
+    };
+
+    const updatedTask = await MaintenanceTask.findByIdAndUpdate(
+      taskId,
+      { $push: { updates: update } },
+      { new: true }
+    );
+
+    res.status(200).json({
+      message: "Task updated successfully",
+      task: updatedTask,
     });
   } catch (error) {
-    console.error("Update task status error:", error);
-    res.status(500).json({ error: "Failed to update task status" });
+    console.error("Update error:", error);
+    res.status(500).json({ error: "Failed to update task" });
   }
 };
+
+exports.getTasksForTechPerson = async (req, res) => {
+  try {
+    const techPersonId = req.params.id;
+
+    // Fetch tech person details
+    const techPerson = await TechPerson.findById(techPersonId).lean();
+    if (!techPerson) {
+      return res.status(404).json({ error: "Tech person not found" });
+    }
+
+    // Fetch tasks where assignedTo matches techPersonId, include status
+    const tasks = await MaintenanceTask.find({ assignedTo: techPersonId })
+      .select("title description status createdAt")
+      .lean();
+    console.log("Fetched tasks for tech person:", tasks);
+
+    res.status(200).json({
+      techPerson: {
+        ...techPerson,
+        tasks,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching tech person tasks:", error);
+    res.status(500).json({ error: "Failed to fetch tasks" });
+  }
+};
+
 
 // const Project = require("../models/project.model");
 
