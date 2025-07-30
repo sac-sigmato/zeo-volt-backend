@@ -5,7 +5,8 @@ const authController = require("../controllers/authController");
 // OTP & User
 router.post("/generate-otp", authController.generateOTP);
 router.post("/verify-otp", authController.verifyOTP);
-router.put("/user/:userId", authController.updateUserDetails);
+router.put("/update-profile/:userId", authController.updateUserDetails);
+router.post("/forgot-password", authController.forgotPassword);
 router.get("/get-user", authController.getUserDetails);
 router.post("/submit-referral/:userId", authController.submitReferral);
 router.post("/add-maintenance-task", authController.addMaintenanceTask);

@@ -2,14 +2,25 @@
 const Subscriber = require("../models/Subscriber");
 const Referral = require("../models/referral");
 // Generate OTP via Twilio
+
 exports.generateOTP = async (req, res) => {
   try {
     const { phone } = req.body;
+
     if (!phone) {
       return res.status(400).json({ error: "Phone number is required" });
     }
 
     console.log("Received OTP request for:", phone);
+
+    // 1️⃣ Check if the user exists
+    const existingUser = await Subscriber.findOne({ phone });
+
+    if (!existingUser) {
+      return res
+        .status(404)
+        .json({ error: "User not found. Please contact admin." });
+    }
 
     // ===============================
     // Twilio OTP sending is disabled
@@ -19,13 +30,13 @@ exports.generateOTP = async (req, res) => {
     //   .services(process.env.TWILIO_VERIFY_SERVICE_SID)
     //   .verifications.create({ to: phone, channel: "sms" });
 
-    // Simulate success response without Twilio
+    // 2️⃣ Simulate OTP generation success
     res.json({
       message: "OTP (simulated) sent successfully",
-      status: "pending", // could be "sent" or "pending"
+      status: "pending",
     });
   } catch (error) {
-    console.error("Twilio OTP generation error:", error);
+    console.error("OTP generation error:", error);
     res.status(500).json({ error: "Failed to send OTP" });
   }
 };
@@ -132,6 +143,23 @@ exports.updateUserDetails = async (req, res) => {
   } catch (error) {
     console.error("Update user error:", error);
     res.status(500).json({ error: "Failed to update user details" });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+
+    // Simulate sending a password reset email
+    console.log(`Sending password reset email to ${email}`);
+
+    res.json({ message: "Password reset email sent successfully" });
+  } catch (error) {
+    console.error("Forgot password error:", error);
+    res.status(500).json({ error: "Failed to send password reset email" });
   }
 };
 
