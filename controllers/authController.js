@@ -230,7 +230,7 @@ exports.addMaintenanceTask = async (req, res) => {
 };
 
 //create a new cpntroller for add tech person
-const { TechPerson } = require("../models/techperson");
+const { TechPerson } = require("../models/TechPerson");
 
 exports.addTechPerson = async (req, res) => {
   try {
