@@ -1,7 +1,7 @@
-// const client = require("../utils/twilioClient"); // Adjust path as needed
-const Subscriber = require("../models/Subscriber");
-const Referral = require("../models/referral");
-// Generate OTP via Twilio
+const Subscriber = require("../../models/Subscriber");
+const Referral = require("../../models/referral");
+const { MaintenanceTask } = require("../../models/MaintenanceTask");
+const { TechPerson } = require("../../models/techperson");
 
 exports.generateOTP = async (req, res) => {
   try {
@@ -91,7 +91,7 @@ exports.updateUserDetails = async (req, res) => {
   try {
     const { userId } = req.params;
     console.log("Updating user details for ID:", userId);
-    
+
     const {
       subId,
       name,
@@ -203,7 +203,7 @@ exports.submitReferral = async (req, res) => {
 };
 
 // create a new controller for add maintenance task
-const {MaintenanceTask} = require("../models/MaintenanceTask");
+
 exports.addMaintenanceTask = async (req, res) => {
   try {
     const { title, description, assignedTo, subscriberId } = req.body;
@@ -217,12 +217,10 @@ exports.addMaintenanceTask = async (req, res) => {
       subscriber: subscriberId,
     });
     await newTask.save();
-    res
-      .status(201)
-      .json({
-        message: "Maintenance task created successfully",
-        task: newTask,
-      });
+    res.status(201).json({
+      message: "Maintenance task created successfully",
+      task: newTask,
+    });
   } catch (error) {
     console.error("Add maintenance task error:", error);
     res.status(500).json({ error: "Failed to create maintenance task" });
@@ -230,12 +228,11 @@ exports.addMaintenanceTask = async (req, res) => {
 };
 
 //create a new cpntroller for add tech person
-const { TechPerson } = require("../models/techperson");
 
 exports.addTechPerson = async (req, res) => {
   try {
     console.log("Adding tech person:", req.body);
-    
+
     const { name, phone, email } = req.body;
     const newTechPerson = new TechPerson({
       name,
@@ -243,12 +240,10 @@ exports.addTechPerson = async (req, res) => {
       email,
     });
     await newTechPerson.save();
-    res
-      .status(201)
-      .json({
-        message: "Tech person added successfully",
-        techPerson: newTechPerson,
-      });
+    res.status(201).json({
+      message: "Tech person added successfully",
+      techPerson: newTechPerson,
+    });
   } catch (error) {
     console.error("Add tech person error:", error);
     res.status(500).json({ error: "Failed to add tech person" });
@@ -323,7 +318,6 @@ exports.getTasksForTechPerson = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch tasks" });
   }
 };
-
 
 // const Project = require("../models/project.model");
 
