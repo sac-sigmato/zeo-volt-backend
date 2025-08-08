@@ -9,8 +9,4 @@ const TechPersonSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-const TechPerson = mongoose.model("TechPerson", TechPersonSchema);
-
-module.exports = {
-  TechPerson
-};
+module.exports = mongoose.model("TechPerson", TechPersonSchema);
