@@ -231,6 +231,7 @@ exports.addMaintenanceTask = async (req, res) => {
 
 //create a new cpntroller for add tech person
 const { TechPerson } = require("../models/techperson");
+
 exports.addTechPerson = async (req, res) => {
   try {
     console.log("Adding tech person:", req.body);
