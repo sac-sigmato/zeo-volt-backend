@@ -3,7 +3,6 @@ const SubAdmin = require("../../models/admin/subAdmin");
 
 
 exports.createSubAdmin = async (req, res) => {
-  console.log("req body", req.body);
   try {
     const { name, email, password, roleId, status } = req.body;
 

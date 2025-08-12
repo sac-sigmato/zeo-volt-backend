@@ -111,9 +111,12 @@ exports.getAllSubscribers = async (req, res) => {
 
 exports.getSubscriberById = async (req, res) => {
   try {
-    const subscriber = await Subscriber.findById(req.params.id).populate(
-      "subscribedDevices"
-    ); // ← populate devices
+     const subscriber = await Subscriber.findById(req.params.id).populate({
+       path: "subscribedDevices.device", // Correct path to populate
+       model: "Device", // Explicitly specify the model
+       select: "-__v", // Optionally exclude fields
+     });
+     console.log("subscriber.subscribedDevices", subscriber.subscribedDevices);
 
     if (!subscriber) {
       return res.status(404).json({ message: "Subscriber not found" });

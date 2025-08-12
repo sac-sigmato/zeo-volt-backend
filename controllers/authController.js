@@ -168,11 +168,8 @@ exports.forgotPassword = async (req, res) => {
 
 //Give get user api return user data I have only one as of now for testing
 exports.getUserDetails = async (req, res) => {
-  console.log("here");
-
   try {
     const user = await Subscriber.find();
-    console.log(user);
 
     res.json({ user });
   } catch (error) {
@@ -230,7 +227,7 @@ exports.addMaintenanceTask = async (req, res) => {
 };
 
 //create a new cpntroller for add tech person
-const { TechPerson } = require("../models/TechPerson");
+const  TechPerson  = require("../models/TechPerson");
 
 exports.addTechPerson = async (req, res) => {
   try {

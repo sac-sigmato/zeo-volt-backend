@@ -8,6 +8,18 @@ const pointSchema = new mongoose.Schema({
   points: { type: Number, required: true },
 });
 
+const subscribedDeviceSchema = new mongoose.Schema({
+  device: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Device",
+    required: true,
+  },
+  documentUrl: {
+    type: String,
+    default: "",
+  },
+});
+
 const subscriberSchema = new mongoose.Schema(
   {
     subId: {
@@ -42,17 +54,10 @@ const subscriberSchema = new mongoose.Schema(
       enum: ["Active", "Inactive"],
       default: "Active",
     },
-    subscribedDevices: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Device",
-      },
-    ],
-
-    points: [pointSchema], // <-- Add this array here
+    subscribedDevices: [subscribedDeviceSchema],
+    points: [pointSchema],
   },
   { timestamps: true }
 );
-
 
 module.exports = mongoose.model("Subscriber", subscriberSchema);

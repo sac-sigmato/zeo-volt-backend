@@ -3,7 +3,6 @@ const jwt = require("jsonwebtoken");
 const SuperAdmin = require("../../models/admin/superAdmin");
 
 exports.signUpSuperAdmin = async (req, res) => {
-  console.log("req body", req.body);
   const { name, email, password } = req.body;
 
   if (!name || !email || !password) {
