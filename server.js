@@ -1,9 +1,7 @@
 require("dotenv").config();
-
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-
 const subscriberRoutes = require("./routes/subscriberRoutes");
 const adminRoutes = require("./routes/admin/superAdminRoutes");
 const permissionRoutes = require("./routes/admin/permissionRoutes");
@@ -32,9 +30,7 @@ app.use("/api", subsciberDevice);
 app.use("/api", ticketRoutes);
 app.use("/api", dashboardStats);
 app.use("/api", authRoutes);
-
 const PORT = process.env.PORT || 5000;
-
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
