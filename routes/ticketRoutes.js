@@ -6,7 +6,7 @@ const { updateTicketStatus } = require("../controllers/ticketStatusChange");
 const router = express.Router();
 
 
-router.post("/create/ticket", verifyToken, createTicket);
+router.post("/create/ticket", createTicket);
 router.post("/get/all/tickets", verifyToken, getAllTickets);
 router.put("/update/ticket/:id", verifyToken, updateTicketStatus);
 
