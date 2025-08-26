@@ -27,7 +27,7 @@ router.get("/tech-person/:id/tasks", authController.getTasksForTechPerson);
 // router.get("/user/:userId/loyalty", authController.getLoyaltyPoints);
 
 // // Referrals
-// router.post("/user/:userId/referrals", authController.submitReferral);
-// router.get("/user/:userId/referrals", authController.getReferrals);
+router.post("/user/:userId/referrals", authController.submitReferral);
+router.get("/user/:userId/referrals", authController.getReferrals);
 
 module.exports = router;

@@ -178,6 +178,7 @@ exports.getUserDetails = async (req, res) => {
   }
 };
 
+// controller to submit referral by userId
 exports.submitReferral = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -196,6 +197,18 @@ exports.submitReferral = async (req, res) => {
   } catch (error) {
     console.error("Submit referral error:", error);
     res.status(500).json({ error: "Failed to submit referral" });
+  }
+};
+
+// controller to get referrals by userId
+exports.getReferrals = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const referrals = await Referral.find({ referredBy: userId });
+    res.json({ referrals });
+  } catch (error) {
+    console.error("Get referrals error:", error);
+    res.status(500).json({ error: "Failed to fetch referrals" });
   }
 };
 
@@ -358,35 +371,4 @@ exports.getTasksForTechPerson = async (req, res) => {
 //     res.status(500).json({ error: "Failed to fetch loyalty points" });
 //   }
 // };
-// const Referral = require("../models/referral.model");
 
-// exports.submitReferral = async (req, res) => {
-//   try {
-//     const { userId } = req.params;
-//     const { name, phone, email } = req.body;
-
-//     const referral = new Referral({
-//       referredBy: userId,
-//       name,
-//       phone,
-//       email,
-//       status: "Pending",
-//     });
-
-//     await referral.save();
-//     res.json({ message: "Referral submitted successfully", referral });
-//   } catch (error) {
-//     console.error("Submit referral error:", error);
-//     res.status(500).json({ error: "Failed to submit referral" });
-//   }
-// };
-// exports.getReferrals = async (req, res) => {
-//   try {
-//     const { userId } = req.params;
-//     const referrals = await Referral.find({ referredBy: userId });
-//     res.json({ referrals });
-//   } catch (error) {
-//     console.error("Get referrals error:", error);
-//     res.status(500).json({ error: "Failed to fetch referrals" });
-//   }
-// };
