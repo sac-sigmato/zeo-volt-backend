@@ -37,9 +37,9 @@ async function generateUniqueTicketId() {
 
 exports.createTicket = async (req, res) => {
   try {
-    const { subscriberId, deviceId, description } = req.body;
+    const { subscriberId, issueType, description, priority } = req.body;
 
-    if (!subscriberId || !deviceId || !description?.trim()) {
+    if (!subscriberId || !issueType?.trim() || !description?.trim()) {
       return res.status(400).json({ message: "All fields are required." });
     }
 
@@ -49,12 +49,6 @@ exports.createTicket = async (req, res) => {
       return res.status(404).json({ message: "Subscriber not found." });
     }
 
-    // Validate Device
-    const device = await Device.findById(deviceId);
-    if (!device) {
-      return res.status(404).json({ message: "Device not found." });
-    }
-
     // Generate unique ticketId
     const ticketId = await generateUniqueTicketId();
 
@@ -62,8 +56,9 @@ exports.createTicket = async (req, res) => {
     const ticket = new Ticket({
       ticketId,
       subscriber: subscriberId,
-      device: deviceId,
+      issueType,
       description,
+      priority,
     });
 
     await ticket.save();

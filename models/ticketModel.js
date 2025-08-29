@@ -8,20 +8,23 @@ const ticketSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-
     subscriber: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Subscriber",
       required: true,
     },
-    device: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Device",
+    issueType: {
+      type: String,
       required: true,
     },
     description: {
       type: String,
       required: true,
+    },
+    priority: {
+      type: String,
+      enum: ["Low", "Medium", "High"],
+      default: "Medium",
     },
     status: {
       type: String,
