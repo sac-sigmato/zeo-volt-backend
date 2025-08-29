@@ -239,6 +239,48 @@ exports.addMaintenanceTask = async (req, res) => {
   }
 };
 
+
+const  Device  = require("../models/admin/device"); // adjust path
+
+// Get first subscribed device details directly from userId
+exports.getFirstSubscribedDevice = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    console.log("Fetching first subscribed device for user:", userId);
+
+    // Find user and populate subscribedDevices
+    const user = await Subscriber.findById(userId).populate(
+      "subscribedDevices.device"
+    );
+
+    if (
+      !user ||
+      !user.subscribedDevices ||
+      user.subscribedDevices.length === 0
+    ) {
+      return res.status(404).json({ message: "No subscribed devices found." });
+    }
+
+    // Get the first deviceId from subscribedDevices array
+    const firstDeviceId = user.subscribedDevices[0].device;
+
+    // Fetch full device details from Device collection
+    const device = await Device.findById(firstDeviceId);
+
+    if (!device) {
+      return res.status(404).json({ message: "Device not found" });
+    }
+
+    // Send device details
+    res.status(200).json({
+      message: "First subscribed device details fetched successfully",
+      device,
+    });
+  } catch (err) {
+    console.error("Error fetching first subscribed device:", err);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
 //create a new cpntroller for add tech person
 const  TechPerson  = require("../models/TechPerson");
 
@@ -333,7 +375,6 @@ exports.getTasksForTechPerson = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch tasks" });
   }
 };
-
 
 // const Project = require("../models/project.model");
 
