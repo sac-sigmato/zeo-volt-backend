@@ -73,52 +73,70 @@ exports.createTicket = async (req, res) => {
   }
 };
 
+// exports.getAllTickets = async (req, res) => {
+//   try {
+//     const { search = "" } = req.body;
+//     const regex = new RegExp(search, "i");
+
+//     const pipeline = [
+//       {
+//         $lookup: {
+//           from: "subscribers",
+//           localField: "subscriber",
+//           foreignField: "_id",
+//           as: "subscriber",
+//         },
+//       },
+//       {
+//         $unwind: "$subscriber",
+//       },
+//       {
+//         $lookup: {
+//           from: "devices",
+//           localField: "device",
+//           foreignField: "_id",
+//           as: "device",
+//         },
+//       },
+//       {
+//         $unwind: "$device",
+//       },
+//     ];
+
+//     if (search.trim()) {
+//       pipeline.push({
+//         $match: {
+//           $or: [
+//             { ticketId: regex },
+//             { description: regex },
+//             { "subscriber.name": regex },
+//             { "subscriber.phone": regex },
+//             { "device.deviceId": regex },
+//             { "device.deviceName": regex },
+//           ],
+//         },
+//       });
+//     }
+
+//     const tickets = await Ticket.aggregate(pipeline);
+
+//     res.status(200).json(tickets);
+//   } catch (err) {
+//     console.error("Error fetching tickets:", err);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
+
+
+// get user ticket by id
 exports.getAllTickets = async (req, res) => {
   try {
-    const { search = "" } = req.body;
-    const regex = new RegExp(search, "i");
+    const { userId } = req.params;
 
-    const pipeline = [
-      {
-        $lookup: {
-          from: "subscribers",
-          localField: "subscriber",
-          foreignField: "_id",
-          as: "subscriber",
-        },
-      },
-      {
-        $unwind: "$subscriber",
-      },
-      {
-        $lookup: {
-          from: "devices",
-          localField: "device",
-          foreignField: "_id",
-          as: "device",
-        },
-      },
-      {
-        $unwind: "$device",
-      },
-    ];
-
-    if (search.trim()) {
-      pipeline.push({
-        $match: {
-          $or: [
-            { ticketId: regex },
-            { description: regex },
-            { "subscriber.name": regex },
-            { "subscriber.phone": regex },
-            { "device.deviceId": regex },
-            { "device.deviceName": regex },
-          ],
-        },
-      });
+    const tickets = await Ticket.find({ subscriber: userId });
+    if (!tickets || tickets.length === 0) {
+      return res.status(404).json({ message: "No tickets found." });
     }
-
-    const tickets = await Ticket.aggregate(pipeline);
 
     res.status(200).json(tickets);
   } catch (err) {

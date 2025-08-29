@@ -7,7 +7,7 @@ const router = express.Router();
 
 
 router.post("/create/ticket", createTicket);
-router.post("/get/all/tickets", verifyToken, getAllTickets);
+router.get("/get/all/tickets/:userId", getAllTickets);
 router.put("/update/ticket/:id", verifyToken, updateTicketStatus);
 
 module.exports = router;
