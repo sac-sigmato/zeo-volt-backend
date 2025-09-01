@@ -29,6 +29,7 @@ router.get("/tech-person/:id/tasks", authController.getTasksForTechPerson);
 // // Referrals
 router.post("/user/:userId/referrals", authController.submitReferral);
 router.get("/user/:userId/referrals", authController.getReferrals);
+router.get("/referrals", authController.getAllReferrals);
 //
 // Get subscriber device using userId
 router.get("/user/:userId/devices", authController.getFirstSubscribedDevice);

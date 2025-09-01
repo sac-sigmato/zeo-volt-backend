@@ -211,6 +211,66 @@ exports.getReferrals = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch referrals" });
   }
 };
+const mongoose = require("mongoose");
+
+// create a new controller for getAllReferrals
+exports.getAllReferrals = async (req, res) => {
+  try {
+    // Fetch all referrals
+    const referrals = await Referral.find().lean();
+    console.log("📋 Raw referrals:", JSON.stringify(referrals, null, 2));
+
+    // Get all unique referredBy userIds (they are already ObjectIds)
+    const rawUserIds = referrals.map((ref) => ref.referredBy).filter(Boolean);
+    console.log("🔍 Raw referredBy values:", rawUserIds);
+
+    // Remove duplicates - no need to convert to ObjectId since they already are
+    const userIds = [...new Set(rawUserIds)];
+    console.log("🆔 Unique User IDs:", userIds);
+
+    // Fetch all subscribers in one go
+    const subscribers = await Subscriber.find({ _id: { $in: userIds } })
+      .select("name _id")
+      .lean();
+    console.log("👥 Found subscribers:", subscribers);
+
+    // Map userId to name (convert both to string for consistent comparison)
+    const userIdToName = {};
+    subscribers.forEach((sub) => {
+      userIdToName[sub._id.toString()] = sub.name;
+    });
+    console.log("🗺️ User ID to Name mapping:", userIdToName);
+
+    // Attach username to each referral
+    const referralsWithUsernames = referrals.map((ref) => {
+      const referredById = ref.referredBy;
+      return {
+        ...ref,
+        referredByName: referredById
+          ? userIdToName[referredById.toString()] || null
+          : null,
+        referredById: referredById ? referredById.toString() : null,
+      };
+    });
+
+    console.log(
+      "✅ Final referrals with usernames:",
+      JSON.stringify(referralsWithUsernames, null, 2)
+    );
+
+    res.json({
+      success: true,
+      referrals: referralsWithUsernames,
+    });
+  } catch (error) {
+    console.error("❌ Get all referrals error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch all referrals",
+      message: error.message,
+    });
+  }
+};
 
 // create a new controller for add maintenance task
 const {MaintenanceTask} = require("../models/MaintenanceTask");
