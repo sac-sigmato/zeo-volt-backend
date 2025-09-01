@@ -299,6 +299,79 @@ exports.addMaintenanceTask = async (req, res) => {
   }
 };
 
+const createMaintenancePlan = async (userId, deviceId) => {
+  const totalServices = 8;
+  const services = [];
+
+  const now = new Date();
+
+  for (let i = 0; i < totalServices; i++) {
+    services.push({
+      title: "System Inspection",
+      description: "Comprehensive check system wiring",
+      subscriber: userId,
+      device: deviceId,
+      serviceIndex: i + 1,
+      year: Math.floor(i / 2) + 1, // 2 services per year
+      scheduledDate: new Date(
+        new Date(now).setMonth(now.getMonth() + i * 6) // every 6 months
+      ),
+      status: "upcoming",
+    });
+  }
+
+  return await MaintenanceTask.insertMany(services);
+};
+
+// API endpoint
+exports.createMaintenancePlanAPI = async (req, res) => {
+  try {
+    const { userId, deviceId } = req.body;
+
+    const result = await createMaintenancePlan(userId, deviceId);
+
+    res.status(201).json({
+      message: "Maintenance plan created",
+      totalServices: result.length,
+      services: result,
+    });
+  } catch (err) {
+    console.error("Error creating maintenance plan:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.getMaintenancePlanAPI = async (req, res) => {
+   try {
+     const { subscriber, device } = req.params;
+      console.log("Fetching maintenance plan for:", { subscriber, device });
+
+     if (!subscriber || !device) {
+       return res
+         .status(400)
+         .json({ message: "subscriber and device are required" });
+     }
+
+     // Fetch all matching maintenance records
+     const records = await MaintenanceTask.find({
+       subscriber,
+       device,
+     }).sort({ createdAt: -1 }); // optional: latest first
+
+     if (!records || records.length === 0) {
+       return res.status(404).json({ message: "No maintenance records found" });
+     }
+
+     res.status(200).json({
+       success: true,
+       count: records.length,
+       data: records,
+     });
+   } catch (error) {
+     console.error("Error fetching maintenance:", error);
+     res.status(500).json({ message: "Server Error", error: error.message });
+   }
+};
 
 const  Device  = require("../models/admin/device"); // adjust path
 

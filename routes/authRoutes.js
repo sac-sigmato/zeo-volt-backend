@@ -12,6 +12,8 @@ router.get("/get-user", authController.getUserDetails);
 router.get("/tech-persons", authController.getTechPersonsList);
 router.post("/submit-referral/:userId", authController.submitReferral);
 router.post("/add-maintenance-task", authController.addMaintenanceTask);
+router.post("/create-maintenance-plan", authController.createMaintenancePlanAPI);
+router.get("/get-maintenance-plan/:subscriber/:device", authController.getMaintenancePlanAPI);
 router.post("/add-tech-person", authController.addTechPerson);
 router.put("/update-maintenance-task/:taskId", authController.updateTaskStatus);
 

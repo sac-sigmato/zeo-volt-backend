@@ -73,59 +73,85 @@ exports.createTicket = async (req, res) => {
   }
 };
 
-// exports.getAllTickets = async (req, res) => {
-//   try {
-//     const { search = "" } = req.body;
-//     const regex = new RegExp(search, "i");
+exports.getAllTickets2 = async (req, res) => {
+  try {
+    const tickets = await Ticket.find()
+      .populate("subscriber", "name phone"); // fetch only name & phone
 
-//     const pipeline = [
-//       {
-//         $lookup: {
-//           from: "subscribers",
-//           localField: "subscriber",
-//           foreignField: "_id",
-//           as: "subscriber",
-//         },
-//       },
-//       {
-//         $unwind: "$subscriber",
-//       },
-//       {
-//         $lookup: {
-//           from: "devices",
-//           localField: "device",
-//           foreignField: "_id",
-//           as: "device",
-//         },
-//       },
-//       {
-//         $unwind: "$device",
-//       },
-//     ];
+    if (!tickets || tickets.length === 0) {
+      return res.status(404).json({ message: "No tickets found." });
+    }
 
-//     if (search.trim()) {
-//       pipeline.push({
-//         $match: {
-//           $or: [
-//             { ticketId: regex },
-//             { description: regex },
-//             { "subscriber.name": regex },
-//             { "subscriber.phone": regex },
-//             { "device.deviceId": regex },
-//             { "device.deviceName": regex },
-//           ],
-//         },
-//       });
-//     }
+    const formattedTickets = tickets.map(ticket => ({
+      _id: ticket._id,
+      ticketId: ticket.ticketId,
+      issueType: ticket.issueType,
+      description: ticket.description,
+      priority: ticket.priority,
+      status: ticket.status,
+      createdAt: ticket.createdAt,
+      updatedAt: ticket.updatedAt,
+      subscriberName: ticket.subscriber?.name || null,
+      subscriberPhone: ticket.subscriber?.phone || null,
+    }));
 
-//     const tickets = await Ticket.aggregate(pipeline);
+    res.status(200).json(formattedTickets);
+  } catch (err) {
+    console.error("Error fetching tickets:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+  // try {
+  //   const { search = "" } = req.body;
+  //   const regex = new RegExp(search, "i");
 
-//     res.status(200).json(tickets);
-//   } catch (err) {
-//     console.error("Error fetching tickets:", err);
-//     res.status(500).json({ message: "Internal server error" });
-//   }
-// };
+  //   const pipeline = [
+  //     {
+  //       $lookup: {
+  //         from: "subscribers",
+  //         localField: "subscriber",
+  //         foreignField: "_id",
+  //         as: "subscriber",
+  //       },
+  //     },
+  //     {
+  //       $unwind: "$subscriber",
+  //     },
+  //     {
+  //       $lookup: {
+  //         from: "devices",
+  //         localField: "device",
+  //         foreignField: "_id",
+  //         as: "device",
+  //       },
+  //     },
+  //     {
+  //       $unwind: "$device",
+  //     },
+  //   ];
+
+  //   if (search.trim()) {
+  //     pipeline.push({
+  //       $match: {
+  //         $or: [
+  //           { ticketId: regex },
+  //           { description: regex },
+  //           { "subscriber.name": regex },
+  //           { "subscriber.phone": regex },
+  //           { "device.deviceId": regex },
+  //           { "device.deviceName": regex },
+  //         ],
+  //       },
+  //     });
+  //   }
+
+  //   const tickets = await Ticket.aggregate(pipeline);
+
+  //   res.status(200).json(tickets);
+  // } catch (err) {
+  //   console.error("Error fetching tickets:", err);
+  //   res.status(500).json({ message: "Internal server error" });
+  // }
+};
 
 
 // get user ticket by id
