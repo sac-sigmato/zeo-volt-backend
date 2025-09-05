@@ -87,67 +87,60 @@ exports.verifyOTP = async (req, res) => {
   }
 };
 
+const { Types } = require("mongoose");
+
 exports.updateUserDetails = async (req, res) => {
   try {
-    const { userId } = req.params;
-    console.log("Updating user details for ID:", userId);
-    
-    const {
-      subId,
-      name,
-      phone,
-      email,
-      city,
-      area,
-      pincode,
-      fullAddress,
-      referralCode,
-      isVerified,
-      role,
-      sunSmiles,
-      status,
-      subscribedDevices,
-      points,
-    } = req.body;
+    const userIdRaw = (req.params.userId || "").trim();
+    console.log("Updating user details for ID:", userIdRaw);
 
-    if (!userId) {
-      return res.status(400).json({ error: "Subscriber ID is required" });
+    if (!Types.ObjectId.isValid(userIdRaw)) {
+      return res.status(400).json({
+        error: "Invalid userId (must be a 24-character hex ObjectId)",
+        received: userIdRaw,
+      });
     }
+    const userId = new Types.ObjectId(userIdRaw);
 
     const user = await Subscriber.findById(userId);
     if (!user) {
       return res.status(404).json({ error: "Subscriber not found" });
     }
-
-    // Update all fields if provided
-    if (subId) user.subId = subId;
-    if (name) user.name = name;
-    if (phone) user.phone = phone;
-    if (email) user.email = email;
-    if (city) user.city = city;
-    if (area) user.area = area;
-    if (pincode) user.pincode = pincode;
-    if (fullAddress) user.fullAddress = fullAddress;
-    if (referralCode) user.referralCode = referralCode;
-    if (typeof isVerified === "boolean") user.isVerified = isVerified;
-    if (role) user.role = role;
-    if (typeof sunSmiles === "number") user.sunSmiles = sunSmiles;
-    if (status) user.status = status;
-    if (Array.isArray(subscribedDevices))
-      user.subscribedDevices = subscribedDevices;
-    if (Array.isArray(points)) user.points = points;
+    console.log("Current user data:", user);
+    
+    // --- only update provided fields (keeps empty string/false/0 valid) ---
+    const up = req.body || {};
+    if (up.subId !== undefined) user.subId = up.subId;
+    if (up.name !== undefined) user.name = up.name;
+    if (up.phone !== undefined) user.phone = up.phone;
+    if (up.email !== undefined) user.email = up.email;
+    if (up.city !== undefined) user.city = up.city;
+    if (up.area !== undefined) user.area = up.area;
+    if (up.pincode !== undefined) user.pincode = up.pincode;
+    if (up.fullAddress !== undefined) user.fullAddress = up.fullAddress;
+    if (up.referralCode !== undefined) user.referralCode = up.referralCode;
+    if (up.isVerified !== undefined) user.isVerified = up.isVerified;
+    if (up.role !== undefined) user.role = up.role;
+    if (up.sunSmiles !== undefined) user.sunSmiles = up.sunSmiles;
+    if (up.status !== undefined) user.status = up.status;
+    if (
+      up.subscribedDevices !== undefined &&
+      Array.isArray(up.subscribedDevices)
+    ) {
+      user.subscribedDevices = up.subscribedDevices;
+    }
+    if (up.points !== undefined && Array.isArray(up.points)) {
+      user.points = up.points;
+    }
 
     await user.save();
-
-    res.json({
-      message: "Subscriber details updated successfully",
-      user,
-    });
+    res.json({ message: "Subscriber details updated successfully", user });
   } catch (error) {
     console.error("Update user error:", error);
     res.status(500).json({ error: "Failed to update user details" });
   }
 };
+
 
 exports.forgotPassword = async (req, res) => {
   try {

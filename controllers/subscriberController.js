@@ -85,29 +85,56 @@ exports.addSubscriber = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
 exports.getAllSubscribers = async (req, res) => {
   try {
     const { search = "" } = req.body; // POST request with JSON body
 
-    const query = {
-      $or: [
+    // Base query: role must be "customer"
+    const baseQuery = { role: "customer" };
+
+    // Add search conditions if provided
+    if (search) {
+      baseQuery.$or = [
         { name: { $regex: search, $options: "i" } },
         { email: { $regex: search, $options: "i" } },
         { phone: { $regex: search, $options: "i" } },
         { subId: { $regex: search, $options: "i" } },
-      ],
-    };
+      ];
+    }
 
-    const subscribers = await Subscriber.find(search ? query : {}).sort({
+    const subscribers = await Subscriber.find(baseQuery).sort({
       createdAt: -1,
     });
+
     res.status(200).json(subscribers);
   } catch (err) {
     console.error("Error fetching subscribers:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+// exports.getAllSubscribers = async (req, res) => {
+//   try {
+//     const { search = "" } = req.body; // POST request with JSON body
+
+//     const query = {
+//       $or: [
+//         { name: { $regex: search, $options: "i" } },
+//         { email: { $regex: search, $options: "i" } },
+//         { phone: { $regex: search, $options: "i" } },
+//         { subId: { $regex: search, $options: "i" } },
+//       ],
+//     };
+
+//     const subscribers = await Subscriber.find(search ? query : {}).sort({
+//       createdAt: -1,
+//     });
+//     res.status(200).json(subscribers);
+//   } catch (err) {
+//     console.error("Error fetching subscribers:", err);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
 
 exports.getSubscriberById = async (req, res) => {
   try {
