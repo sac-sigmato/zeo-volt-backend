@@ -1,8 +1,7 @@
-// const client = require("../utils/twilioClient"); // Adjust path as needed
+const client = require("../twilioClient"); // Adjust path as needed
 const Subscriber = require("../models/Subscriber");
 const Referral = require("../models/referral");
 // Generate OTP via Twilio
-
 exports.generateOTP = async (req, res) => {
   try {
     const { phone } = req.body;
@@ -22,18 +21,19 @@ exports.generateOTP = async (req, res) => {
         .json({ error: "User not found. Please contact admin." });
     }
 
-    // ===============================
-    // Twilio OTP sending is disabled
-    // ===============================
+    // 2️⃣ Call Twilio
+    const verification = await client.verify.v2
+      .services(process.env.TWILIO_VERIFY_SERVICE_SID)
+      .verifications.create({ to: `+91${phone}`, channel: "sms" });
 
-    // const verification = await client.verify.v2
-    //   .services(process.env.TWILIO_VERIFY_SERVICE_SID)
-    //   .verifications.create({ to: phone, channel: "sms" });
+    console.log("Twilio generate response:", verification);
 
-    // 2️⃣ Simulate OTP generation success
-    res.json({
-      message: "OTP (simulated) sent successfully",
-      status: "pending",
+    // 3️⃣ Return Twilio response
+    return res.json({
+      message: "OTP sent successfully",
+      sid: verification.sid,
+      status: verification.status, // should be "pending"
+      to: verification.to,
     });
   } catch (error) {
     console.error("OTP generation error:", error);
@@ -41,17 +41,30 @@ exports.generateOTP = async (req, res) => {
   }
 };
 
+
 exports.verifyOTP = async (req, res) => {
   try {
-    const { phone, otp } = req.body;
+    let { phone, otp } = req.body;
+    console.log("Verifying OTP for:", phone, "with code:", otp);
+
     if (!phone || !otp) {
       return res.status(400).json({ error: "Phone and OTP are required" });
     }
 
-    // ===============================
-    // DEV MODE: OTP bypass logic
-    // ===============================
-    if (otp === "1234") {
+    // ✅ Ensure E.164 format (India example)
+    if (!phone.startsWith("+")) {
+      phone = "+91" + phone;
+    }
+
+    // 🔹 Twilio OTP Verification
+    const verificationCheck = await client.verify.v2
+      .services(process.env.TWILIO_VERIFY_SERVICE_SID)
+      .verificationChecks.create({ to: phone, code: otp });
+
+    console.log("Twilio verification response:", verificationCheck);
+
+    if (verificationCheck.status === "approved") {
+      // Find or create user
       let user = await Subscriber.findOne({ phone });
       if (!user) {
         user = new Subscriber({ phone });
@@ -59,33 +72,19 @@ exports.verifyOTP = async (req, res) => {
       }
 
       return res.json({
-        message: "OTP verified (bypass mode)",
+        message: "OTP verified successfully",
         userId: user._id,
         userDetails: user,
       });
     }
 
-    // ===============================
-    // Twilio OTP verification disabled
-    // ===============================
-
-    // const verificationCheck = await client.verify.v2
-    //   .services(process.env.TWILIO_VERIFY_SERVICE_SID)
-    //   .verificationChecks.create({ to: phone, code: otp });
-
-    // if (verificationCheck.status !== "approved") {
-    //   return res.status(400).json({ error: "Invalid or expired OTP" });
-    // }
-
-    // Simulate fallback if not using Twilio
-    return res
-      .status(400)
-      .json({ error: "Invalid OTP (dev mode only accepts 1234)" });
+    return res.status(400).json({ error: "Invalid or expired OTP" });
   } catch (error) {
     console.error("Twilio OTP verification error:", error);
     res.status(500).json({ error: "Failed to verify OTP" });
   }
 };
+
 
 const { Types } = require("mongoose");
 
