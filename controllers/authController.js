@@ -51,15 +51,11 @@ exports.verifyOTP = async (req, res) => {
       return res.status(400).json({ error: "Phone and OTP are required" });
     }
 
-    // ✅ Ensure E.164 format (India example)
-    if (!phone.startsWith("+")) {
-      phone = "+91" + phone;
-    }
 
     // 🔹 Twilio OTP Verification
     const verificationCheck = await client.verify.v2
       .services(process.env.TWILIO_VERIFY_SERVICE_SID)
-      .verificationChecks.create({ to: phone, code: otp });
+      .verificationChecks.create({ to: `+91${phone}`, code: otp });
 
     console.log("Twilio verification response:", verificationCheck);
 
@@ -67,8 +63,7 @@ exports.verifyOTP = async (req, res) => {
       // Find or create user
       let user = await Subscriber.findOne({ phone });
       if (!user) {
-        user = new Subscriber({ phone });
-        await user.save();
+       return res.status(400).json({ error: "User Not Found!" });
       }
 
       return res.json({
@@ -77,8 +72,9 @@ exports.verifyOTP = async (req, res) => {
         userDetails: user,
       });
     }
-
-    return res.status(400).json({ error: "Invalid or expired OTP" });
+    else {
+      return res.status(400).json({ error: "Invalid or expired OTP" });
+    }
   } catch (error) {
     console.error("Twilio OTP verification error:", error);
     res.status(500).json({ error: "Failed to verify OTP" });
