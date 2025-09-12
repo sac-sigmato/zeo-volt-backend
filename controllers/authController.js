@@ -502,18 +502,13 @@ const WebhookEvent = require("../models/webhookEvent");
 exports.handleThirdPartyWebhook = async (req, res) => {
   try {
     const payload = req.body;
-
     console.log(
       "Received third-party webhook:",
       JSON.stringify(payload, null, 2)
     );
 
-    // Save the webhook event
-    const newWebhookEvent = new WebhookEvent({
-      source: "crobary", // optional, helps to identify later
-      payload,
-    });
-
+    // Save to DB
+    const newWebhookEvent = new WebhookEvent(payload);
     await newWebhookEvent.save();
 
     res.status(200).json({ message: "Webhook received successfully" });
@@ -522,6 +517,7 @@ exports.handleThirdPartyWebhook = async (req, res) => {
     res.status(500).json({ error: "Failed to process webhook" });
   }
 };
+
 
 // const Project = require("../models/project.model");
 

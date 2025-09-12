@@ -2,20 +2,14 @@ const mongoose = require("mongoose");
 
 const webhookEventSchema = new mongoose.Schema(
   {
-    source: {
-      type: String, // optional: to identify the provider (e.g., "crobary")
-      required: false,
-    },
-    payload: {
-      type: mongoose.Schema.Types.Mixed, // allows any JSON structure
-      required: true,
-    },
-    receivedAt: {
-      type: Date,
-      default: Date.now,
-    },
+    source: { type: String, default: "cronberry" }, // to identify CRM
+    eventType: { type: String }, // if CRM provides an event name
+    payload: { type: mongoose.Schema.Types.Mixed, required: true }, // store raw payload
+    processed: { type: Boolean, default: false }, // if you need to process later
   },
-  { strict: false } // ensures extra fields in payload don’t break schema
+  { timestamps: true } // adds createdAt, updatedAt
 );
 
-module.exports = mongoose.model("WebhookEvent", webhookEventSchema);
+const WebhookEvent = mongoose.model("WebhookEvent", webhookEventSchema);
+
+module.exports = WebhookEvent;
