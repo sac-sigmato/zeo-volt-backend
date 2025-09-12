@@ -36,4 +36,7 @@ router.get("/referrals", authController.getAllReferrals);
 // Get subscriber device using userId
 router.get("/user/:userId/devices", authController.getFirstSubscribedDevice);
 
+// Webhook for third-party service JSON data
+router.post("/webhook/third-party", authController.handleThirdPartyWebhook);
+
 module.exports = router;
