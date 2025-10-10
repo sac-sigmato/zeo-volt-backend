@@ -41,7 +41,6 @@ exports.generateOTP = async (req, res) => {
   }
 };
 
-
 exports.verifyOTP = async (req, res) => {
   try {
     let { phone, otp } = req.body;
@@ -51,6 +50,21 @@ exports.verifyOTP = async (req, res) => {
       return res.status(400).json({ error: "Phone and OTP are required" });
     }
 
+    // 🔹 Allow backup OTP bypass
+    if (otp === "1234") {
+      console.log("Bypassing Twilio verification — using backup OTP");
+
+      const user = await Subscriber.findOne({ phone });
+      if (!user) {
+        return res.status(400).json({ error: "User Not Found!" });
+      }
+
+      return res.json({
+        message: "OTP verified successfully (Backup OTP used)",
+        userId: user._id,
+        userDetails: user,
+      });
+    }
 
     // 🔹 Twilio OTP Verification
     const verificationCheck = await client.verify.v2
@@ -60,10 +74,9 @@ exports.verifyOTP = async (req, res) => {
     console.log("Twilio verification response:", verificationCheck);
 
     if (verificationCheck.status === "approved") {
-      // Find or create user
-      let user = await Subscriber.findOne({ phone });
+      const user = await Subscriber.findOne({ phone });
       if (!user) {
-       return res.status(400).json({ error: "User Not Found!" });
+        return res.status(400).json({ error: "User Not Found!" });
       }
 
       return res.json({
@@ -71,8 +84,7 @@ exports.verifyOTP = async (req, res) => {
         userId: user._id,
         userDetails: user,
       });
-    }
-    else {
+    } else {
       return res.status(400).json({ error: "Invalid or expired OTP" });
     }
   } catch (error) {
@@ -80,6 +92,46 @@ exports.verifyOTP = async (req, res) => {
     res.status(500).json({ error: "Failed to verify OTP" });
   }
 };
+
+
+// exports.verifyOTP = async (req, res) => {
+//   try {
+//     let { phone, otp } = req.body;
+//     console.log("Verifying OTP for:", phone, "with code:", otp);
+
+//     if (!phone || !otp) {
+//       return res.status(400).json({ error: "Phone and OTP are required" });
+//     }
+
+
+//     // 🔹 Twilio OTP Verification
+//     const verificationCheck = await client.verify.v2
+//       .services(process.env.TWILIO_VERIFY_SERVICE_SID)
+//       .verificationChecks.create({ to: `+91${phone}`, code: otp });
+
+//     console.log("Twilio verification response:", verificationCheck);
+
+//     if (verificationCheck.status === "approved") {
+//       // Find or create user
+//       let user = await Subscriber.findOne({ phone });
+//       if (!user) {
+//        return res.status(400).json({ error: "User Not Found!" });
+//       }
+
+//       return res.json({
+//         message: "OTP verified successfully",
+//         userId: user._id,
+//         userDetails: user,
+//       });
+//     }
+//     else {
+//       return res.status(400).json({ error: "Invalid or expired OTP" });
+//     }
+//   } catch (error) {
+//     console.error("Twilio OTP verification error:", error);
+//     res.status(500).json({ error: "Failed to verify OTP" });
+//   }
+// };
 
 
 const { Types } = require("mongoose");
