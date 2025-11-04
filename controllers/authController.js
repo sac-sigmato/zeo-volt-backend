@@ -7,37 +7,61 @@ exports.generateOTP = async (req, res) => {
     const { phone } = req.body;
 
     if (!phone) {
-      return res.status(400).json({ error: "Phone number is required" });
+      return res.json({
+        success: false,
+        verified: false,
+        message: "Phone number is required",
+      });
     }
 
-    console.log("Received OTP request for:", phone);
+    console.log("📩 OTP request received for:", phone);
 
-    // 1️⃣ Check if the user exists
+    // ✅ Step 1: Check user existence
     const existingUser = await Subscriber.findOne({ phone });
 
     if (!existingUser) {
-      return res
-        .status(404)
-        .json({ error: "User not found. Please contact admin." });
+      return res.json({
+        success: false,
+        verified: false,
+        message: "User not found. Please contact admin.",
+      });
     }
 
-    // 2️⃣ Call Twilio
-    const verification = await client.verify.v2
-      .services(process.env.TWILIO_VERIFY_SERVICE_SID)
-      .verifications.create({ to: `+91${phone}`, channel: "sms" });
+    // ✅ Step 2: Try sending OTP (don’t throw if Twilio fails)
+    try {
+      const verification = await client.verify.v2
+        .services(process.env.TWILIO_VERIFY_SERVICE_SID)
+        .verifications.create({ to: `+91${phone}`, channel: "sms" });
 
-    console.log("Twilio generate response:", verification);
+      console.log("✅ Twilio verification sent:", verification.sid);
 
-    // 3️⃣ Return Twilio response
-    return res.json({
-      message: "OTP sent successfully",
-      sid: verification.sid,
-      status: verification.status, // should be "pending"
-      to: verification.to,
-    });
+      return res.json({
+        success: true,
+        verified: true,
+        message: "OTP sent successfully",
+        sid: verification.sid,
+        status: verification.status, // "pending"
+        to: verification.to,
+      });
+    } catch (twilioError) {
+      console.error("⚠️ Twilio OTP send failed:", twilioError);
+
+      // Still send success response (gracefully)
+      return res.json({
+        success: true,
+        verified: false,
+        message: "OTP could not be sent, but request received.",
+      });
+    }
   } catch (error) {
-    console.error("OTP generation error:", error);
-    res.status(500).json({ error: "Failed to send OTP" });
+    console.error("❌ OTP generation error:", error);
+
+    // Even here, no 500 error — respond gracefully
+    return res.json({
+      success: true,
+      verified: false,
+      message: "Request received, but something went wrong internally.",
+    });
   }
 };
 
@@ -93,7 +117,6 @@ exports.verifyOTP = async (req, res) => {
   }
 };
 
-
 // exports.verifyOTP = async (req, res) => {
 //   try {
 //     let { phone, otp } = req.body;
@@ -102,7 +125,6 @@ exports.verifyOTP = async (req, res) => {
 //     if (!phone || !otp) {
 //       return res.status(400).json({ error: "Phone and OTP are required" });
 //     }
-
 
 //     // 🔹 Twilio OTP Verification
 //     const verificationCheck = await client.verify.v2
@@ -133,7 +155,6 @@ exports.verifyOTP = async (req, res) => {
 //   }
 // };
 
-
 const { Types } = require("mongoose");
 
 exports.updateUserDetails = async (req, res) => {
@@ -154,7 +175,7 @@ exports.updateUserDetails = async (req, res) => {
       return res.status(404).json({ error: "Subscriber not found" });
     }
     console.log("Current user data:", user);
-    
+
     // --- only update provided fields (keeps empty string/false/0 valid) ---
     const up = req.body || {};
     if (up.subId !== undefined) user.subId = up.subId;
@@ -188,7 +209,6 @@ exports.updateUserDetails = async (req, res) => {
   }
 };
 
-
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -219,26 +239,26 @@ exports.getUserDetails = async (req, res) => {
 };
 
 // controller to submit referral by userId
-exports.submitReferral = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const { name, phone, email } = req.body;
+// exports.submitReferral = async (req, res) => {
+//   try {
+//     const { userId } = req.params;
+//     const { name, phone, email } = req.body;
 
-    const referral = new Referral({
-      referredBy: userId,
-      name,
-      phone,
-      email,
-      status: "Pending",
-    });
+//     const referral = new Referral({
+//       referredBy: userId,
+//       name,
+//       phone,
+//       email,
+//       status: "Pending",
+//     });
 
-    await referral.save();
-    res.json({ message: "Referral submitted successfully", referral });
-  } catch (error) {
-    console.error("Submit referral error:", error);
-    res.status(500).json({ error: "Failed to submit referral" });
-  }
-};
+//     await referral.save();
+//     res.json({ message: "Referral submitted successfully", referral });
+//   } catch (error) {
+//     console.error("Submit referral error:", error);
+//     res.status(500).json({ error: "Failed to submit referral" });
+//   }
+// };
 
 // controller to get referrals by userId
 exports.getReferrals = async (req, res) => {
@@ -313,7 +333,7 @@ exports.getAllReferrals = async (req, res) => {
 };
 
 // create a new controller for add maintenance task
-const {MaintenanceTask} = require("../models/MaintenanceTask");
+const { MaintenanceTask } = require("../models/MaintenanceTask");
 exports.addMaintenanceTask = async (req, res) => {
   try {
     const { title, description, assignedTo, subscriberId } = req.body;
@@ -327,12 +347,10 @@ exports.addMaintenanceTask = async (req, res) => {
       subscriber: subscriberId,
     });
     await newTask.save();
-    res
-      .status(201)
-      .json({
-        message: "Maintenance task created successfully",
-        task: newTask,
-      });
+    res.status(201).json({
+      message: "Maintenance task created successfully",
+      task: newTask,
+    });
   } catch (error) {
     console.error("Add maintenance task error:", error);
     res.status(500).json({ error: "Failed to create maintenance task" });
@@ -382,38 +400,38 @@ exports.createMaintenancePlanAPI = async (req, res) => {
 };
 
 exports.getMaintenancePlanAPI = async (req, res) => {
-   try {
-     const { subscriber, device } = req.params;
-      console.log("Fetching maintenance plan for:", { subscriber, device });
+  try {
+    const { subscriber, device } = req.params;
+    console.log("Fetching maintenance plan for:", { subscriber, device });
 
-     if (!subscriber || !device) {
-       return res
-         .status(400)
-         .json({ message: "subscriber and device are required" });
-     }
+    if (!subscriber || !device) {
+      return res
+        .status(400)
+        .json({ message: "subscriber and device are required" });
+    }
 
-     // Fetch all matching maintenance records
-     const records = await MaintenanceTask.find({
-       subscriber,
-       device,
-     }).sort({ createdAt: -1 }); // optional: latest first
+    // Fetch all matching maintenance records
+    const records = await MaintenanceTask.find({
+      subscriber,
+      device,
+    }).sort({ createdAt: -1 }); // optional: latest first
 
-     if (!records || records.length === 0) {
-       return res.status(404).json({ message: "No maintenance records found" });
-     }
+    if (!records || records.length === 0) {
+      return res.status(404).json({ message: "No maintenance records found" });
+    }
 
-     res.status(200).json({
-       success: true,
-       count: records.length,
-       data: records,
-     });
-   } catch (error) {
-     console.error("Error fetching maintenance:", error);
-     res.status(500).json({ message: "Server Error", error: error.message });
-   }
+    res.status(200).json({
+      success: true,
+      count: records.length,
+      data: records,
+    });
+  } catch (error) {
+    console.error("Error fetching maintenance:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
 };
 
-const  Device  = require("../models/admin/device"); // adjust path
+const Device = require("../models/admin/device"); // adjust path
 
 // Get first subscribed device details directly from userId
 exports.getFirstSubscribedDevice = async (req, res) => {
@@ -455,12 +473,12 @@ exports.getFirstSubscribedDevice = async (req, res) => {
   }
 };
 //create a new cpntroller for add tech person
-const  TechPerson  = require("../models/TechPerson");
+const TechPerson = require("../models/TechPerson");
 
 exports.addTechPerson = async (req, res) => {
   try {
     console.log("Adding tech person:", req.body);
-    
+
     const { name, phone, email } = req.body;
     const newTechPerson = new TechPerson({
       name,
@@ -468,12 +486,10 @@ exports.addTechPerson = async (req, res) => {
       email,
     });
     await newTechPerson.save();
-    res
-      .status(201)
-      .json({
-        message: "Tech person added successfully",
-        techPerson: newTechPerson,
-      });
+    res.status(201).json({
+      message: "Tech person added successfully",
+      techPerson: newTechPerson,
+    });
   } catch (error) {
     console.error("Add tech person error:", error);
     res.status(500).json({ error: "Failed to add tech person" });
@@ -570,7 +586,6 @@ exports.handleThirdPartyWebhook = async (req, res) => {
   }
 };
 
-
 // const Project = require("../models/project.model");
 
 // exports.getUserProjects = async (req, res) => {
@@ -608,3 +623,93 @@ exports.handleThirdPartyWebhook = async (req, res) => {
 //   }
 // };
 
+const KYCSubmission = require("../models/KYCSubmission");
+
+exports.submitKYC = async (req, res) => {
+  try {
+    const { userId, kycData } = req.body;
+
+    if (!userId || !kycData) {
+      return res.status(400).json({ error: "userId and kycData are required" });
+    }
+
+    // Save KYC data to the database
+    const kycSubmission = new KYCSubmission({ userId, kycData });
+    await kycSubmission.save();
+    console.log(userId, "KYC updated");
+
+    // ✅ Update isKYC flag in Subscriber model
+    const updatedSubscriber = await Subscriber.findByIdAndUpdate(
+      userId,
+      { isKYC: true },
+      { new: true }
+    );
+
+    if (!updatedSubscriber) {
+      console.warn(`⚠️ Subscriber not found for userId: ${userId}`);
+      return res.status(404).json({ error: "Subscriber not found" });
+    }
+
+    res.status(201).json({
+      message: "KYC submitted successfully",
+      userId: updatedSubscriber._id,
+      isKYC: updatedSubscriber.isKYC,
+    });
+  } catch (error) {
+    console.error("❌ KYC submission error:", error);
+    res.status(500).json({ error: "Failed to submit KYC" });
+  }
+};
+
+exports.getReferrals = async (req, res) => {
+  try {
+    const { partnerId } = req.params;
+    console.log("Fetching referrals for partnerId:", partnerId);
+    if (!partnerId) {
+      return res.status(400).json({ error: "partnerId is required" });
+    }
+
+    // Fetch all referrals made by this partner
+    const referrals = await Referral.find({ referredBy: partnerId }).sort({
+      createdAt: -1,
+    });
+
+    res.status(200).json({
+      message: "Referrals fetched successfully",
+      referrals,
+    });
+  } catch (error) {
+    console.error("❌ Error fetching referrals:", error);
+    res.status(500).json({ error: "Failed to fetch referrals" });
+  }
+};
+
+exports.submitReferral = async (req, res) => {
+  try {
+    console.log('API hitting');
+    
+    const { partnerId } = req.params;
+    const { name, phone, email } = req.body;
+    console.log("Submitting referral for partnerId:", partnerId);
+    if (!partnerId) {
+      return res.status(400).json({ error: "partnerId is required" });
+    }
+
+    // Create a new referral
+    const newReferral = new Referral({
+      referredBy: partnerId,
+      name,
+      phone,
+      email,
+    });
+    await newReferral.save();
+
+    res.status(201).json({
+      message: "Referral submitted successfully",
+      referral: newReferral,
+    });
+  } catch (error) {
+    console.error("❌ Error submitting referral:", error);
+    res.status(500).json({ error: "Failed to submit referral" });
+  }
+};

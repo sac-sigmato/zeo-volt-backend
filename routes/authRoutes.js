@@ -39,4 +39,11 @@ router.get("/user/:userId/devices", authController.getFirstSubscribedDevice);
 // Webhook for third-party service JSON data
 router.post("/webhook/third-party", authController.handleThirdPartyWebhook);
 
+//KYC Routes
+router.post("/kyc/submit", authController.submitKYC);
+
+// Get Referral List
+router.get("/:partnerId/referrals-list", authController.getReferrals);
+router.post("/:partnerId/referral-submit", authController.submitReferral);
+
 module.exports = router;

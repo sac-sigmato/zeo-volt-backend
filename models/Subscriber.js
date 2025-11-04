@@ -54,6 +54,10 @@ const subscriberSchema = new mongoose.Schema(
       enum: ["Active", "Inactive"],
       default: "Active",
     },
+    isKYC:{
+      type: Boolean,
+      default: false,
+    },
     subscribedDevices: [subscribedDeviceSchema],
     points: [pointSchema],
   },
