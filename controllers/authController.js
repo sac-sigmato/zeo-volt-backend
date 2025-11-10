@@ -568,19 +568,13 @@ exports.getTasksForTechPerson = async (req, res) => {
 const WebhookEvent = require("../models/webhookEvent");
 exports.handleThirdPartyWebhook = async (req, res) => {
   try {
-    console.log(req);
     
     // 🧠 Some services send a GET request for verification
     if (req.method === "GET") {
-      console.log('GEt');
-      
-      const challenge =
-        req.query.challenge || req.query.verify_token || req.query.token;
-      if (challenge) {
-        console.log("Verification request received:", req.query);
-        return res.status(200).send(challenge);
-      }
-      return res.status(400).send("Invalid verification request");
+       console.log("Webhook verification ping received");
+        return res
+          .status(200)
+          .json({ message: "Webhook received successfully" });
     }
 
     // 🧠 Some services send a POST with a verification_code
@@ -600,7 +594,7 @@ exports.handleThirdPartyWebhook = async (req, res) => {
     const newWebhookEvent = new WebhookEvent(payload);
     await newWebhookEvent.save();
 
-    res.status(200).json({ message: "Webhook received successfully" });
+    res.status(200).json({ message: "Webhook received successfully!" });
   } catch (error) {
     console.error("Webhook handling error:", error);
     res.status(500).json({ error: "Failed to process webhook" });
