@@ -566,9 +566,30 @@ exports.getTasksForTechPerson = async (req, res) => {
 };
 
 const WebhookEvent = require("../models/webhookEvent");
-
 exports.handleThirdPartyWebhook = async (req, res) => {
   try {
+    console.log(req);
+    
+    // 🧠 Some services send a GET request for verification
+    if (req.method === "GET") {
+      console.log('GEt');
+      
+      const challenge =
+        req.query.challenge || req.query.verify_token || req.query.token;
+      if (challenge) {
+        console.log("Verification request received:", req.query);
+        return res.status(200).send(challenge);
+      }
+      return res.status(400).send("Invalid verification request");
+    }
+
+    // 🧠 Some services send a POST with a verification_code
+    if (req.body && req.body.verification_code) {
+      console.log("Verification POST received:", req.body);
+      return res.status(200).send(req.body.verification_code);
+    }
+
+    // ✅ Otherwise, treat it as a real webhook payload
     const payload = req.body;
     console.log(
       "Received third-party webhook:",
@@ -585,6 +606,27 @@ exports.handleThirdPartyWebhook = async (req, res) => {
     res.status(500).json({ error: "Failed to process webhook" });
   }
 };
+
+// exports.handleThirdPartyWebhook = async (req, res) => {
+//   try {
+//     const payload = req.body;
+//     console.log(
+//       "Received third-party webhook:",
+//       JSON.stringify(payload, null, 2)
+//     );
+
+//     // Save to DB
+//     const newWebhookEvent = new WebhookEvent(payload);
+//     await newWebhookEvent.save();
+
+//     res.status(200).json({ message: "Webhook received successfully" });
+//   } catch (error) {
+//     console.error("Webhook handling error:", error);
+//     res.status(500).json({ error: "Failed to process webhook" });
+//   }
+// };
+
+
 
 // const Project = require("../models/project.model");
 
